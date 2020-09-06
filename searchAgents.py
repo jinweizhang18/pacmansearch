@@ -297,7 +297,7 @@ class CornersProblem(search.SearchProblem):
         Returns the start state (in your state space, not the full Pacman state
         space)
         """
-        return self.startingPosition
+        return self.startingPosition + (self.cornersboolean,)
 
 
     def isGoalState(self, state):
@@ -305,7 +305,6 @@ class CornersProblem(search.SearchProblem):
         Returns whether this search state is a goal state of the problem.
         """
         if state in self.corners:
-            print(state)
             if list(state) == [1,1]:
                 print(list(state))
                 self.cornersboolean = self.cornersboolean | 0x1000
@@ -333,11 +332,11 @@ class CornersProblem(search.SearchProblem):
 
         successors = []
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
-            x,y = state
+            x,y,cornersboolean = state
             dx, dy = Actions.directionToVector(action) #IF NORTH dx = 0, dy = 1
             nextx, nexty = int(x + dx), int(y + dy)
             if not self.walls[nextx][nexty]:
-                nextState = (nextx, nexty)
+                nextState = (nextx, nexty, self.cornersboolean) #(X,Y, 4bit code)
                 cost = 1 #self.costFn(nextState)
                 successors.append( ( nextState, action, cost) )
 
