@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -72,6 +72,17 @@ def tinyMazeSearch(problem):
     w = Directions.WEST
     return  [s, s, w, s, w, w, s, w]
 
+def directionHelper(string):
+    assert string == ("South" or "North" or "East" or "West")
+    if string == "South":
+        return Directions.SOUTH
+    elif string == "North":
+        return Directions.NORTH
+    elif string == "East":
+        return Directions.EAST
+    else:
+        return Directions.WEST
+
 def depthFirstSearch(problem):
     """
     Search the deepest nodes in the search tree first.
@@ -86,7 +97,38 @@ def depthFirstSearch(problem):
     print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
-    "*** YOUR CODE HERE ***"
+    #print("Start:", problem.getStartState())
+    #print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
+    #print("Start's successors:", problem.getSuccessors(problem.getStartState()))
+    actions = []
+    if problem.isGoalState(problem.getStartState()):
+        return []
+    closed = []
+    fringe = util.Stack() # A fringe of paths, a path is a list of states
+    for successor in problem.getSuccessors(problem.getStartState()):
+        fringe.push([list(successor)])
+
+    while(1):
+        if fringe.isEmpty():
+            return None
+        curr_path = fringe.pop() #[(A, A->B:4, 4), [B, B->C:0, 4]]
+        curr_state = curr_path[len(curr_path) - 1][0]
+        #print("curr path:", curr_path, "\ncurr state: ", curr_state, "\n")
+        if problem.isGoalState(curr_state):
+            actions = []
+            for triple in curr_path:
+                actions.append(triple[1])
+            return actions
+        if curr_state not in closed:
+            closed.append(curr_state)
+            for successor in problem.getSuccessors(curr_state):
+                new_path = curr_path + [list(successor)]
+                #print("np:", new_path)
+                fringe.push(new_path)
+
+    #print("Start:", problem.getStartState())
+    #print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
+    #print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     util.raiseNotDefined()
 
 def breadthFirstSearch(problem):
