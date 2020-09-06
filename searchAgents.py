@@ -279,17 +279,14 @@ class CornersProblem(search.SearchProblem):
         """
         self.walls = startingGameState.getWalls()
         self.startingPosition = startingGameState.getPacmanPosition()
-        top, right = self.walls.height-2, self.walls.width-2
-        self.top = top
-        self.right = right
-        self.corners = ((1,1), (1,top), (right, 1), (right, top))
+        self.top, self.right = self.walls.height-2, self.walls.width-2
+        self.corners = ((1,1), (1,self.top), (self.right, 1), (self.right, self.top))
         for corner in self.corners:
             if not startingGameState.hasFood(*corner):
                 print('Warning: no food in corner ' + str(corner))
         self._expanded = 0 # DO NOT CHANGE; Number of search nodes expanded
         # Please add any code here which you would like to use
         # in initializing the problem
-        self.cornersboolean = 0x0000 #((1,1), (1,top), (right, 1), (right, top))
 
 
     def getStartState(self):
@@ -297,25 +294,16 @@ class CornersProblem(search.SearchProblem):
         Returns the start state (in your state space, not the full Pacman state
         space)
         """
-        return self.startingPosition + (self.cornersboolean,)
+        return self.startingPosition + (0x0000,)
 
 
     def isGoalState(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
-        if state in self.corners:
-            if list(state) == [1,1]:
-                print(list(state))
-                self.cornersboolean = self.cornersboolean | 0x1000
-            elif list(state) == [1, self.top]:
-                self.cornersboolean = self.cornersboolean | 0x0100
-            elif list(state) == [self.right, 1]:
-                self.cornersboolean = self.cornersboolean | 0x0010
-            elif list(state) == [self.right,self.top]:
-                self.cornersboolean = self.cornersboolean | 0x0001
-            if self.cornersboolean == 0x1111:
-                return True
+        x,y,boolean = state
+        if boolean == 0x1111:
+            return True
         else:
             return False
 
@@ -329,19 +317,54 @@ class CornersProblem(search.SearchProblem):
             state, 'action' is the action required to get there, and 'stepCost'
             is the incremental cost of expanding to that successor
         """
-
+        #print("coords:", state[0:2])
         successors = []
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
-            x,y,cornersboolean = state
-            dx, dy = Actions.directionToVector(action) #IF NORTH dx = 0, dy = 1
+            x,y,b = state
+            #coords = (x,y)
+            dx, dy = Actions.directionToVector(action)
             nextx, nexty = int(x + dx), int(y + dy)
-            if not self.walls[nextx][nexty]:
-                nextState = (nextx, nexty, self.cornersboolean) #(X,Y, 4bit code)
-                cost = 1 #self.costFn(nextState)
-                successors.append( ( nextState, action, cost) )
+            nextCoords = (nextx, nexty)
+            hitsWall = self.walls[nextx][nexty]
+
+            if not hitsWall:
+                #print("NOT hitsWall")
+                if nextCoords in self.corners:
+                    if list(nextCoords) == [1,1]:
+                        #print("next coords == 1,1")
+                        b = b | 0x1000
+                    elif list(nextCoords) == [1, self.top]:
+                        #print("next coords == 1,top")
+                        b = b | 0x0100
+                    elif list(nextCoords) == [self.right, 1]:
+                        #print("next coords == right,1")
+                        b = b | 0x0010
+                    elif list(nextCoords) == [self.right,self.top]:
+                        #print("next coords == right,top")
+                        b = b | 0x0001
+                nextState = nextCoords + (b,)
+                successors.append((nextState, action, 1))
+
+        #print("end of getSuccessors for state:", state)
+
 
         self._expanded += 1 # DO NOT CHANGE
         return successors
+
+
+
+        # successors = []
+        # for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
+        #     x,y,cornersboolean = state
+        #     dx, dy = Actions.directionToVector(action) #IF NORTH dx = 0, dy = 1
+        #     nextx, nexty = int(x + dx), int(y + dy)
+        #     if not self.walls[nextx][nexty]:
+        #         nextState = (nextx, nexty, self.cornersboolean) #(X,Y, 4bit code)
+        #         cost = 1 #self.costFn(nextState)
+        #         successors.append( ( nextState, action, cost) )
+        #
+        # self._expanded += 1 # DO NOT CHANGE
+        # return successors
 
     def getCostOfActions(self, actions):
         """
