@@ -287,6 +287,7 @@ class CornersProblem(search.SearchProblem):
         self._expanded = 0 # DO NOT CHANGE; Number of search nodes expanded
         # Please add any code here which you would like to use
         # in initializing the problem
+        self.startingGameState = startingGameState
 
 
     def getStartState(self):
@@ -397,39 +398,40 @@ def cornersHeuristic(state, problem):
     corners = problem.corners # These are the corner coordinates, ((1, 1), (1, 12), (28, 1), (28, 12))
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
     x,y,b = state
+    #print(b)
     unvisited = ~b #Only check distance to unvisited corners
-    c1 = (unvisited & 0x1000) != 0 #c1 is True if top bit is 1
-    c2 = (unvisited & 0x0100) != 0 #c2 is True if 2nd bit is 1
-    c3 = (unvisited & 0x0010) != 0
-    c4 = (unvisited & 0x0001) != 0
+    c1 = (unvisited & 0x1000) #c1 is True if we need to explore to it, so if top bit is 1, c1 should be 1
+    c2 = (unvisited & 0x0100) #if we've been to c2, then 2nd bit is 0. Then the logical and operation should be 0x0000
+    c3 = (unvisited & 0x0010)
+    c4 = (unvisited & 0x0001)
 
     mask = [c1,c2,c3,c4]
-
-    manh_dist = []
-    eucl_dist = []
-
-
     i = 0
+    masked_corners = []
     for corner in corners:
         if mask[i]:
-            manh_dist.append(util.manhattanDistance((x,y), corner))
-            eucl_dist.append(((abs( x - corner[0] )**2) + (abs( y - corner[1] )**2))**0.5)
+            masked_corners.append(corner)
         i = i + 1
 
+    manh_dist = []
+    for i in masked_corners:
+        start_to_first = mazeDistance((x,y), i, problem.startingGameState)
+        total = start_to_first
+        #A_to_B = util.manhattanDistance((x,y), corner)
+        explored = [corner]
+        for j in [x for x in masked_corners if x not in explored]:
+            explored.append(j)
+            total += util.manhattanDistance(i, j)
+            for k in [x for x in masked_corners if x not in explored]:
+                explored.append(k)
+                total += util.manhattanDistance(j, k)
+                for l in [x for x in masked_corners if x not in explored]:
+                    total += util.manhattanDistance(k, l)
 
+        manh_dist.append((total, start_to_first))
 
+    return min(manh_dist, key = lambda tuple: tuple[0])[1] if len(manh_dist) is not 0 else 0
 
-    if len(manh_dist) == 0 and len(eucl_dist) == 0:
-        return 0
-    elif len(eucl_dist) == 0:
-        return min(manh_dist)
-    else:
-        manh_dist.sort()
-        if len(manh_dist) >= 3:
-            return ((manh_dist[0] + manh_dist[1] + manh_dist[2])/1.9)
-        if len(manh_dist) >= 2:
-            return ((manh_dist[0] + manh_dist[1])/2)
-        return (min(manh_dist))
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
