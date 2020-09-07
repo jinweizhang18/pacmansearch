@@ -526,21 +526,16 @@ def foodHeuristic(state, problem):
     position, foodGrid = state
     x,y = position
 
-    manh_dist = []
-    eucl_dist = []
     maze_dist = []
 
     for food in foodGrid.asList():
-        manh_dist.append(util.manhattanDistance(position, food))
-        eucl_dist.append(((abs(x - food[0])**2) + (abs(y - food[1])**2))**0.5)
         maze_dist.append(mazeDistance(position, food, problem.startingGameState))
 
-    if len(manh_dist) == 0 or len(eucl_dist) == 0:
+    if len(maze_dist) == 0:
         return 0
     else:
         maze_dist.sort()
         if (len(maze_dist)>=2):
-            #return sum(maze_dist)/(len(maze_dist)) 
             return maze_dist[len(maze_dist)//2]
         return min(maze_dist)
     return 0
